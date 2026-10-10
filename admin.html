@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Starlight · dashboard</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#0e1020;--panel:#171a33;--line:#282d50;--ink:#e9eaf6;--dim:#9aa0c4;--acc:#a78bfa}
+body{background:var(--bg);color:var(--ink);font:14px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  padding:22px;max-width:1040px;margin:0 auto}
+h1{font-size:19px;font-weight:600;margin-bottom:2px}
+h2{font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--dim);margin:28px 0 10px}
+.sub{color:var(--dim);font-size:13px;margin-bottom:22px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px;overflow:auto}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+.stat b{display:block;font-size:26px;font-weight:600;letter-spacing:-.02em}
+.stat span{color:var(--dim);font-size:12px;text-transform:uppercase;letter-spacing:.08em}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;color:var(--dim);font-weight:500;font-size:11px;text-transform:uppercase;
+  letter-spacing:.08em;padding:0 10px 8px 0;white-space:nowrap}
+td{padding:7px 10px 7px 0;border-top:1px solid var(--line);vertical-align:top}
+td.dim{color:var(--dim)}
+.bars{display:flex;align-items:flex-end;gap:3px;height:120px}
+.bar{flex:1;background:var(--acc);border-radius:3px 3px 0 0;min-height:2px;opacity:.85;position:relative}
+.bar span{position:absolute;bottom:-19px;left:0;right:0;text-align:center;font-size:9px;color:var(--dim)}
+.msg{border-top:1px solid var(--line);padding:12px 0}
+.msg:first-child{border-top:none;padding-top:0}
+.msg p{white-space:pre-wrap;margin-bottom:4px}
+.msg time{color:var(--dim);font-size:12px}
+a{color:var(--acc)}
+#gate{max-width:340px;margin:16vh auto;text-align:center}
+input{width:100%;margin:14px 0 10px;padding:12px 14px;border-radius:10px;border:1px solid var(--line);
+  background:var(--panel);color:var(--ink);font:inherit;outline:none}
+input:focus{border-color:var(--acc)}
+button{width:100%;padding:12px;border-radius:10px;border:none;background:var(--acc);
+  color:#1b1335;font:inherit;font-weight:600;cursor:pointer}
+.err{color:#fca5a5;font-size:13px;min-height:18px;margin-top:8px}
+.top{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+.ghost{width:auto;background:none;border:1px solid var(--line);color:var(--dim);padding:7px 14px;font-size:12px}
+</style>
+</head>
+<body>
+
+<div id="gate">
+  <h1>Starlight</h1>
+  <p class="sub">Dashboard</p>
+  <input id="key" type="password" placeholder="Admin key" autocomplete="off">
+  <button id="in">Open</button>
+  <p class="err" id="err"></p>
+</div>
+
+<main id="dash" hidden></main>
+
+<script>
+/* ---- your Vercel URL, no trailing slash ---- */
+const API = "https://starlight-api.vercel.app";
+
+const $ = s => document.querySelector(s);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g,
+  c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' }[c]));
+const when = t => t ? new Date(t).toLocaleString([], { month:'short', day:'numeric',
+  hour:'2-digit', minute:'2-digit' }) : '—';
+function ago(t){
+  if (!t) return '—';
+  const m = Math.round((Date.now() - new Date(t)) / 60000);
+  if (m < 1)    return 'just now';
+  if (m < 60)   return m + 'm ago';
+  if (m < 1440) return Math.round(m/60) + 'h ago';
+  return Math.round(m/1440) + 'd ago';
+}
+function device(ua){
+  if (!ua) return '—';
+  if (/iPhone|iPad/i.test(ua))  return 'iPhone';
+  if (/Android/i.test(ua))      return 'Android';
+  if (/Mac OS X/i.test(ua))     return 'Mac';
+  if (/Windows/i.test(ua))      return 'Windows';
+  return 'Other';
+}
+
+let KEY = sessionStorage.getItem('sl_admin') || '';
+let timer = null;
+
+async function load(){
+  let r;
+  try {
+    r = await fetch(API + '/api/admin/summary', { headers: { 'X-Admin-Key': KEY } });
+  } catch(e) {
+    $('#err').textContent = 'Could not reach the server.';
+    return;
+  }
+  if (r.status === 401){
+    sessionStorage.removeItem('sl_admin');
+    $('#dash').hidden = true; $('#gate').hidden = false;
+    $('#err').textContent = 'That key is not right.';
+    clearInterval(timer);
+    return;
+  }
+  sessionStorage.setItem('sl_admin', KEY);
+  $('#gate').hidden = true; $('#dash').hidden = false;
+  render(await r.json());
+}
+
+function render(d){
+  const t = d.totals, peak = Math.max(1, ...d.by_hour);
+
+  const bars = d.by_hour.map((n, h) =>
+    '<div class="bar" style="height:' + (n / peak * 100) + '%" title="' + n +
+    ' at ' + h + ':00"><span>' + (h % 3 === 0 ? h : '') + '</span></div>').join('');
+
+  const visits = d.visits.map(v =>
+    '<tr><td>' + when(v.opened_at) + '</td>' +
+    '<td class="dim">' + ago(v.opened_at) + '</td>' +
+    '<td>' + (v.local_time || (v.local_hour != null ? v.local_hour + ':00' : '—')) + '</td>' +
+    '<td class="dim">' + esc([v.city, v.country].filter(Boolean).join(', ') || '—') + '</td>' +
+    '<td class="dim">' + device(v.user_agent) + '</td>' +
+    '<td class="dim">' + (v.is_return ? 'return' : 'first') + '</td></tr>').join('')
+    || '<tr><td colspan="6" class="dim">Nothing yet.</td></tr>';
+
+  const games = d.games.map(g =>
+    '<tr><td>' + esc(g.game) + '</td>' +
+    '<td>' + (g.score != null ? g.score + ' / ' + (g.total ?? '?') : '—') + '</td>' +
+    '<td class="dim">' + (g.duration_ms ? Math.round(g.duration_ms/1000) + 's' : '—') + '</td>' +
+    '<td class="dim">' + esc(JSON.stringify(g.detail || {})) + '</td>' +
+    '<td class="dim">' + when(g.created_at) + '</td></tr>').join('')
+    || '<tr><td colspan="5" class="dim">No games played yet.</td></tr>';
+
+  const msgs = d.messages.map(m =>
+    '<div class="msg"><p>' + esc(m.body) + '</p><time>' +
+    when(m.sent_at || m.created_at) + ' · ' + ago(m.sent_at || m.created_at) +
+    '</time></div>').join('')
+    || '<p class="dim">No messages yet.</p>';
+
+  const pins = d.pins.map(p =>
+    '<tr><td><a target="_blank" rel="noopener" href="https://www.google.com/maps?q=' +
+    p.lat + ',' + p.lng + '">' + p.lat.toFixed(4) + ', ' + p.lng.toFixed(4) + '</a></td>' +
+    '<td class="dim">' + (p.accuracy_m ? '±' + Math.round(p.accuracy_m) + 'm' : '—') + '</td>' +
+    '<td class="dim">' + when(p.created_at) + '</td></tr>').join('')
+    || '<tr><td colspan="3" class="dim">She has not shared a location.</td></tr>';
+
+  $('#dash').innerHTML =
+    '<div class="top"><div><h1>Starlight</h1>' +
+    '<p class="sub">Last opened ' + ago(t.last_open) + ' · ' + when(t.last_open) + '</p></div>' +
+    '<button class="ghost" id="refresh">Refresh</button></div>' +
+
+    '<div class="stats">' +
+      '<div class="stat"><b>' + t.visits   + '</b><span>Opens</span></div>' +
+      '<div class="stat"><b>' + t.sessions + '</b><span>Devices</span></div>' +
+      '<div class="stat"><b>' + t.games    + '</b><span>Games finished</span></div>' +
+      '<div class="stat"><b>' + t.messages + '</b><span>Messages</span></div>' +
+    '</div>' +
+
+    '<h2>When she opens it (her local hour)</h2>' +
+    '<div class="panel"><div class="bars">' + bars + '</div><div style="height:18px"></div></div>' +
+
+    '<h2>Messages</h2><div class="panel">' + msgs + '</div>' +
+
+    '<h2>Games</h2><div class="panel"><table><tr><th>Game</th><th>Score</th><th>Time</th>' +
+      '<th>Detail</th><th>When</th></tr>' + games + '</table></div>' +
+
+    '<h2>Visits</h2><div class="panel"><table><tr><th>Opened</th><th></th><th>Her time</th>' +
+      '<th>Roughly</th><th>Device</th><th></th></tr>' + visits + '</table></div>' +
+
+    '<h2>Shared locations</h2><div class="panel"><table><tr><th>Where</th><th>Accuracy</th>' +
+      '<th>When</th></tr>' + pins + '</table></div>';
+
+  $('#refresh').addEventListener('click', load);
+}
+
+$('#in').addEventListener('click', () => {
+  KEY = $('#key').value.trim();
+  if (!KEY) return;
+  $('#err').textContent = '';
+  load();
+});
+$('#key').addEventListener('keydown', e => { if (e.key === 'Enter') $('#in').click(); });
+
+if (KEY) load();
+timer = setInterval(() => { if (!$('#dash').hidden) load(); }, 60000);
+</script>
+</body>
+</html>
