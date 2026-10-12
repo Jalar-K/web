@@ -42,3 +42,13 @@ export function requireAdmin(req, res) {
   }
   return true;
 }
+
+// A scrambled "network + browser" fingerprint. Used only as a backup way to
+// recognise the same phone if its saved id was wiped. Never stored readable.
+import { createHash } from 'crypto';
+export function fingerprint(req) {
+  const ip = String(req.headers['x-forwarded-for'] || req.headers['x-real-ip'] || '').split(',')[0].trim();
+  const ua = String(req.headers['user-agent'] || '');
+  if (!ip) return null;
+  return createHash('sha256').update('starlight|' + ip + '|' + ua).digest('hex').slice(0, 32);
+}

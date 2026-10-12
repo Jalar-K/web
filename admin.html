@@ -149,9 +149,9 @@ function render(d){
       '" target="_blank" rel="noopener">Take it →</a></p>'
     : '<p class="dim">She has not written a quiz for you yet.</p>';
   const hqRows = hqa.map(a =>
-    '<tr><td>' + a.score + ' / ' + a.total + '</td><td class="dim">' + when(a.created_at) + '</td>' +
+    '<tr><td>' + esc(a.name || '—') + '</td><td>' + a.score + ' / ' + a.total + '</td><td class="dim">' + when(a.created_at) + '</td>' +
     '<td class="dim">' + ago(a.created_at) + '</td></tr>').join('');
-  const hqHtml = hqTop + (hqRows ? '<table><tr><th>Your score</th><th>When</th><th></th></tr>' + hqRows + '</table>' : '');
+  const hqHtml = hqTop + (hqRows ? '<table><tr><th>Name</th><th>Score</th><th>When</th><th></th></tr>' + hqRows + '</table>' : '');
 
   $('#dash').innerHTML =
     '<div class="top"><div><h1>Starlight</h1>' +

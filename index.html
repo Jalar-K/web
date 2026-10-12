@@ -204,6 +204,18 @@ footer .pill .link{color:var(--text)}
 .rv .y{color:var(--ok);font-weight:600}
 .rv .n{color:var(--bad);font-weight:600}
 .hist{display:flex;justify-content:space-between;font-size:13.5px;padding:6px 0;border-top:1px solid var(--border);color:var(--muted)}
+.person{border-top:1px solid var(--border)}
+.person:first-of-type{border-top:none}
+.person summary{list-style:none;display:flex;align-items:center;gap:12px;padding:12px 0;cursor:pointer}
+.person summary::-webkit-details-marker{display:none}
+.person summary::after{content:'\203A';font-size:20px;color:var(--faint);transition:transform .2s}
+.person[open] summary::after{transform:rotate(90deg)}
+.pn{flex:1;min-width:0}
+.pn b{display:block;font-size:15.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pn small{display:block;font-size:12.5px;color:var(--muted)}
+.ps{font-size:15px;font-weight:700;padding:4px 10px;border-radius:999px;border:1px solid currentColor}
+.ps.hi{color:var(--ok)} .ps.mid{color:var(--text)} .ps.lo{color:var(--bad)}
+.pbody{padding:0 0 10px}
 .two{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .two button.ghost{margin-top:8px}
 
@@ -243,8 +255,8 @@ footer .pill .link{color:var(--text)}
       <button class="link" id="msg-clear">Clear</button>
     </div>
     <button class="primary" id="msg-send">Send it</button>
-    <p class="fine">Nothing leaves this page until you tap Send. If you close the tab, whatever you
-    wrote will still be waiting here next time.</p>
+    <p class="fine">It comes straight to me when you tap Send. Until then nothing leaves this page, and if you
+    close the tab, whatever you wrote will still be waiting here next time.</p>
   </section>
 
   <footer>
@@ -888,12 +900,13 @@ function runHerQuiz(host){
 
     const share = el('section', 'panel');
     share.appendChild(el('p', 'eyebrow', 'Your quiz is ready'));
-    share.appendChild(el('p', 'fine', 'Send me the link. When I finish it, my score appears below.'));
-    const wa = el('button', 'primary', 'Send me the link on WhatsApp');
+    share.appendChild(el('p', 'fine', 'Send the link to me (or anyone). Each person picks a name once, and their score shows up here on its own.'));
+    const wa = el('button', 'primary', 'Share the link on WhatsApp');
     wa.addEventListener('click', () => {
       track('herquiz_shared', { via: 'whatsapp' });
-      location.href = 'https://wa.me/' + CFG.PHONE + '?text=' +
-        encodeURIComponent("Your turn. Let's see how well you know me: " + link);
+      // no number here, so WhatsApp lets her pick who to send it to
+      location.href = 'https://wa.me/?text=' +
+        encodeURIComponent("Let's see how well you know me: " + link);
     });
     const two = el('div', 'two');
     const copy = el('button', 'ghost', 'Copy link');
@@ -908,8 +921,8 @@ function runHerQuiz(host){
     share.append(wa, two);
 
     const sc = el('section', 'panel');
-    sc.appendChild(el('p', 'fine', 'Checking my score…'));
-    const refresh = el('button', 'ghost', 'Refresh score');
+    sc.appendChild(el('p', 'fine', 'Checking scores…'));
+    const refresh = el('button', 'ghost', 'Refresh scores');
     refresh.addEventListener('click', load);
     const fresh = el('button', 'link', 'Start a brand-new quiz');
     fresh.style.marginTop = '14px';
@@ -922,7 +935,7 @@ function runHerQuiz(host){
 
     async function load(){
       sc.innerHTML = '';
-      sc.appendChild(el('p', 'fine', 'Checking my score…'));
+      sc.appendChild(el('p', 'fine', 'Checking scores…'));
       let j;
       try {
         j = await apiJson('/api/herquiz?id=' + encodeURIComponent(id) + '&session_id=' + encodeURIComponent(SID));
@@ -935,39 +948,62 @@ function runHerQuiz(host){
       }
       if (!alive) return;
       sc.innerHTML = '';
-      const att = j.attempts || [];
-      sc.appendChild(el('p', 'eyebrow', 'My score'));
-      if (!att.length){
-        sc.appendChild(el('p', 'big', '—'));
-        sc.appendChild(el('p', 'fine', "I haven't taken it yet. " + j.questions.length + ' question' +
-          (j.questions.length === 1 ? '' : 's') + ' waiting for me.'));
+      const att = j.attempts || [], takers = j.takers || [];
+
+      // group every attempt under the person who made it
+      const people = takers.map(t => ({ name: t.name, tries: att.filter(a => a.taker_id === t.id) }));
+      const unnamed = att.filter(a => !a.taker_id || !takers.some(t => t.id === a.taker_id));
+      if (unnamed.length) people.push({ name: 'Before names were added', tries: unnamed });
+      const played = people.filter(p => p.tries.length)
+        .sort((a, b) => new Date(b.tries[0].created_at) - new Date(a.tries[0].created_at));
+      const waiting = people.filter(p => !p.tries.length);
+
+      sc.appendChild(el('p', 'eyebrow', "Who's taken it"));
+      if (!played.length){
+        sc.appendChild(el('p', 'fine', waiting.length
+          ? waiting.map(p => p.name).join(', ') + (waiting.length === 1 ? ' has' : ' have') + ' opened it but not finished yet.'
+          : 'Nobody yet. ' + j.questions.length + ' question' + (j.questions.length === 1 ? '' : 's') + ' waiting.'));
         return;
       }
-      w.insertBefore(sc, share);                    // once there is a score, show it first
-      const a = att[0], r = a.total ? a.score / a.total : 0;
-      const big = el('p', 'big', a.score + ' '); big.appendChild(el('small', '', '/ ' + a.total)); sc.appendChild(big);
-      sc.appendChild(el('p', 'fine',
-        (r === 1 ? 'I know you completely.' : r >= .75 ? 'I know you well.' : r >= .5 ? "Not bad — I'm learning." : 'I clearly need to pay more attention.') +
-        '  ·  ' + fmtWhen(a.created_at)));
+      w.insertBefore(sc, share);                    // once there are scores, show them first
 
-      (a.review || []).forEach(rv => {
-        const row = el('div', 'rv');
-        row.appendChild(el('b', '', rv.q));
-        const mine = rv.pick != null && rv.a[rv.pick] != null ? rv.a[rv.pick] : 'No answer';
-        const s = el('span');
-        s.appendChild(el('span', rv.right ? 'y' : 'n', (rv.right ? '✓ ' : '✕ ') + 'I said: ' + mine));
-        if (!rv.right) s.appendChild(el('span', '', 'Right answer: ' + rv.a[rv.c]));
-        row.appendChild(s);
-        sc.appendChild(row);
+      played.forEach((p, n) => {
+        const a = p.tries[0], r = a.total ? a.score / a.total : 0;
+        const d = el('details', 'person'); if (n === 0) d.open = true;
+        const sm = el('summary');
+        const nm = el('span', 'pn'); nm.appendChild(el('b', '', p.name));
+        nm.appendChild(el('small', '', (p.tries.length === 1 ? '1 try' : p.tries.length + ' tries') + ' · ' + fmtWhen(a.created_at)));
+        const scr = el('span', 'ps', a.score + '/' + a.total);
+        scr.classList.add(r >= .75 ? 'hi' : r >= .5 ? 'mid' : 'lo');
+        sm.append(nm, scr);
+        d.appendChild(sm);
+
+        const body = el('div', 'pbody');
+        (a.review || []).forEach(rv => {
+          const row = el('div', 'rv');
+          row.appendChild(el('b', '', rv.q));
+          const said = rv.pick != null && rv.a[rv.pick] != null ? rv.a[rv.pick] : 'No answer';
+          const sp = el('span');
+          sp.appendChild(el('span', rv.right ? 'y' : 'n', (rv.right ? '✓ ' : '✕ ') + 'Said: ' + said));
+          if (!rv.right) sp.appendChild(el('span', '', 'Right answer: ' + rv.a[rv.c]));
+          row.appendChild(sp);
+          body.appendChild(row);
+        });
+        if (p.tries.length > 1){
+          const e = el('p', 'eyebrow', 'Earlier tries'); e.style.marginTop = '12px'; body.appendChild(e);
+          p.tries.slice(1, 8).forEach(x => {
+            const h = el('div', 'hist');
+            h.append(el('span', '', x.score + ' / ' + x.total), el('span', '', fmtWhen(x.created_at)));
+            body.appendChild(h);
+          });
+        }
+        d.appendChild(body);
+        sc.appendChild(d);
       });
 
-      if (att.length > 1){
-        sc.appendChild(el('p', 'eyebrow', 'Earlier tries')).style.marginTop = '14px';
-        att.slice(1, 8).forEach(x => {
-          const h = el('div', 'hist');
-          h.append(el('span', '', x.score + ' / ' + x.total), el('span', '', fmtWhen(x.created_at)));
-          sc.appendChild(h);
-        });
+      if (waiting.length){
+        const wt = el('p', 'fine', 'Still answering: ' + waiting.map(p => p.name).join(', '));
+        wt.style.marginTop = '12px'; sc.appendChild(wt);
       }
     }
     load();
@@ -1077,14 +1113,19 @@ $('#msg-send').addEventListener('click', async () => {
   if (!text){ toast('Write something first'); box.focus(); return; }
   const btn = $('#msg-send');
   btn.disabled = true; btn.textContent = 'Sending…';
-  await api('/api/message', { body: text });
+  const r = await api('/api/message', { body: text });   // goes straight to my dashboard
+  if (!r || !r.ok){
+    btn.disabled = false; btn.textContent = 'Send it';
+    toast(r && r.status === 429 ? "That's a lot of messages — try again in a bit" : "Didn't send. Check your connection and try again.");
+    return;                                               // draft stays, nothing lost
+  }
   track('message_sent', { chars: text.length });
   store.del('sl_draft');
-  btn.textContent = 'Sent';
-  toast('Sent. Opening WhatsApp…');
-  setTimeout(() => {
-    location.href = 'https://wa.me/' + CFG.PHONE + '?text=' + encodeURIComponent(text);
-  }, 600);
+  box.value = '';
+  $('#msg-saved').textContent = 'Drafts stay on this phone';
+  btn.textContent = 'Sent \u2713';
+  toast("Sent. It's with me now.");
+  setTimeout(() => { btn.disabled = false; btn.textContent = 'Send it'; }, 2500);
 });
 
 /* ---------- her location, only if she asks for it ---------- */

@@ -4,7 +4,7 @@ import { cors, body, isUuid } from '../lib/http.js';
 // Her "quiz me back" questions.
 //   POST { session_id, questions, id? }   -> create (or update her own) quiz, returns { id }
 //   GET  ?id=...                          -> questions WITHOUT the answers (for the person answering)
-//   GET  ?id=...&session_id=...           -> full quiz + every attempt, only for the phone that made it
+//   GET  ?id=...&session_id=...           -> full quiz + every person + every attempt, only for the phone that made it
 
 const MAX_Q = 12;
 
@@ -46,12 +46,15 @@ export default async function handler(req, res) {
     }
 
     const { data: attempts } = await db.from('her_quiz_attempts')
-      .select('score, total, review, duration_ms, created_at')
-      .eq('quiz_id', id).order('created_at', { ascending: false }).limit(20);
+      .select('taker_id, score, total, review, duration_ms, created_at')
+      .eq('quiz_id', id).order('created_at', { ascending: false }).limit(200);
+    const { data: takers } = await db.from('her_quiz_takers')
+      .select('id, name, created_at').eq('quiz_id', id).order('created_at', { ascending: true });
 
     return res.status(200).json({
       id: quiz.id, questions: quiz.questions, updated_at: quiz.updated_at,
-      attempts: attempts || []
+      attempts: attempts || [],
+      takers: takers || []
     });
   }
 

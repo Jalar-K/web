@@ -46,6 +46,13 @@ button.primary:active{transform:scale(.985)}
 .rv .y{color:var(--ok);font-weight:600}
 .rv .n{color:var(--bad);font-weight:600}
 .center{text-align:center}
+.field{width:100%;margin-top:18px;padding:13px 15px;border-radius:12px;border:1px solid var(--border-strong);
+  background:var(--surface-2);color:var(--text);font:inherit;font-size:16px;outline:none;transition:border-color .2s}
+.field:focus{border-color:var(--sel)}
+.field::placeholder{color:var(--muted)}
+.err{color:var(--bad);font-size:14px;font-weight:600;min-height:20px;margin-top:10px}
+.who{display:inline-block;margin-top:2px;padding:4px 10px;border-radius:999px;background:var(--sel-bg);
+  color:var(--sel);font-size:13px;font-weight:700}
 </style>
 </head>
 <body>
@@ -61,7 +68,36 @@ function el(tag, cls, text){ const e = document.createElement(tag); if (cls) e.c
 function card(){ app.innerHTML = ''; const c = el('div', 'card'); app.appendChild(c); return c; }
 function fail(msg){ const c = card(); c.appendChild(el('p', 'eyebrow', 'Hmm')); c.appendChild(el('h1', '', msg)); }
 
-let Q = [], answers = [], i = 0, t0 = 0;
+let Q = [], answers = [], i = 0, t0 = 0, ME = null;
+
+/* A random id saved on this phone (in two places), so the same phone always
+   comes back as the same person. Browsers can't read MAC addresses, so this
+   is the most reliable option. */
+function deviceId(){
+  const read = () => {
+    try { const v = localStorage.getItem('hq_device'); if (v) return v; } catch(e){}
+    const m = document.cookie.match(/(?:^|; )hq_device=([A-Za-z0-9-]+)/);
+    return m ? m[1] : null;
+  };
+  let v = read();
+  if (!v){
+    v = (crypto.randomUUID ? crypto.randomUUID() : Array.from(crypto.getRandomValues(new Uint8Array(16)), b => b.toString(16).padStart(2,'0')).join(''));
+  }
+  try { localStorage.setItem('hq_device', v); } catch(e){}
+  document.cookie = 'hq_device=' + v + '; max-age=' + (60*60*24*400) + '; path=/; SameSite=Lax';
+  return v;
+}
+const DEVICE = deviceId();
+
+async function who(name){
+  const r = await fetch(API + '/api/herquiz-taker', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ quiz_id: id, device_id: DEVICE, name: name || undefined })
+  });
+  let j = {}; try { j = await r.json(); } catch(e){}
+  if (!r.ok){ const e = new Error(j.error || 'failed'); e.status = r.status; throw e; }
+  return j.taker;
+}
 
 async function boot(){
   if (!id) return fail('This link is missing its quiz.');
@@ -72,12 +108,42 @@ async function boot(){
     Q = j.questions || [];
     if (!Q.length) return fail('This quiz has no questions yet.');
   } catch(e){ return fail("Couldn't load the quiz. Check your connection and refresh."); }
-  intro();
+  try { ME = await who(); } catch(e){ return fail("Couldn't load the quiz. Check your connection and refresh."); }
+  ME ? intro() : askName();
+}
+
+function askName(){
+  const c = card();
+  c.appendChild(el('p', 'eyebrow', 'Before you start'));
+  c.appendChild(el('h1', '', "What's your name?"));
+  c.appendChild(el('p', 'sub', "She'll see your score under this name. Choose carefully — it's locked to this phone and can't be changed later."));
+  const inp = el('input', 'field'); inp.placeholder = 'Your name'; inp.maxLength = 30; inp.autocomplete = 'name';
+  const err = el('p', 'err');
+  const go = el('button', 'primary', 'Continue');
+  const submit = async () => {
+    const name = inp.value.replace(/\s+/g, ' ').trim();
+    err.textContent = '';
+    if (name.length < 2) return err.textContent = 'Type at least two letters.';
+    go.disabled = true; go.textContent = 'Saving…';
+    try {
+      ME = await who(name);
+      if (!ME) throw new Error('failed');
+      intro();
+    } catch(e){
+      err.textContent = e.status === 409 ? 'Someone already took that name. Add a surname or initial.'
+                                         : "Couldn't save your name. Try again.";
+      go.disabled = false; go.textContent = 'Continue';
+    }
+  };
+  go.addEventListener('click', submit);
+  inp.addEventListener('keydown', e => { if (e.key === 'Enter') submit(); });
+  c.append(inp, err, go);
+  inp.focus();
 }
 
 function intro(){
   const c = card();
-  c.appendChild(el('p', 'eyebrow', 'Your turn'));
+  c.appendChild(el('span', 'who', ME.name));
   c.appendChild(el('h1', '', 'How well do you know her?'));
   c.appendChild(el('p', 'sub', Q.length + ' question' + (Q.length === 1 ? '' : 's') + ' she wrote about herself. She gets to see your score.'));
   const go = el('button', 'primary', 'Start');
@@ -119,7 +185,7 @@ async function submit(){
   try {
     const r = await fetch(API + '/api/herquiz-answer', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ quiz_id: id, answers, duration_ms: Date.now() - t0 })
+      body: JSON.stringify({ quiz_id: id, device_id: DEVICE, answers, duration_ms: Date.now() - t0 })
     });
     j = await r.json();
     if (!r.ok) throw new Error(j.error || 'failed');
@@ -134,10 +200,10 @@ async function submit(){
 
 function result(j){
   const c = card(), r = j.total ? j.score / j.total : 0;
-  c.appendChild(el('p', 'eyebrow', 'Your score'));
+  c.appendChild(el('p', 'eyebrow', ME.name + ' · your score'));
   const big = el('p', 'big', j.score + ' '); big.appendChild(el('small', '', '/ ' + j.total)); c.appendChild(big);
   c.appendChild(el('p', 'sub', (r === 1 ? 'You know her completely.' : r >= .75 ? 'You know her well.' :
-    r >= .5 ? 'Not bad — keep paying attention.' : 'Time to ask more questions.') + ' She can see this now.'));
+    r >= .5 ? 'Not bad — keep paying attention.' : 'Time to ask more questions.') + ' She can see this under your name.'));
   const list = el('div'); list.style.marginTop = '16px';
   j.review.forEach(rv => {
     const row = el('div', 'rv');
