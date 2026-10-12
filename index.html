@@ -1040,7 +1040,7 @@ function tiles(){
     b.className = 'tile' + (fresh ? ' new' : '');
     b.innerHTML = '<span class="ic">' + g.ic + '</span><span>' + g.name +
                   '<small>' + g.blurb + '</small></span>' +
-                  (fresh ? '<span class="tag">New</span>' :
+                  (fresh ? '<span class="tag">Try It</span>' :
                    done.indexOf(key) > -1 ? '<span class="tick">✓</span>' : '');
     b.addEventListener('click', () => openGame(key));
     box.appendChild(b);
