@@ -116,7 +116,7 @@ function askName(){
   const c = card();
   c.appendChild(el('p', 'eyebrow', 'Before you start'));
   c.appendChild(el('h1', '', "What's your name?"));
-  c.appendChild(el('p', 'sub', "She'll see your score under this name. Choose carefully — it's locked to this phone and can't be changed later."));
+  c.appendChild(el('p', 'sub', "She'll see your score under this name."));
   const inp = el('input', 'field'); inp.placeholder = 'Your name'; inp.maxLength = 30; inp.autocomplete = 'name';
   const err = el('p', 'err');
   const go = el('button', 'primary', 'Continue');
