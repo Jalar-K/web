@@ -5,13 +5,15 @@ export default async function handler(req, res) {
   if (cors(req, res)) return;
   if (!requireAdmin(req, res)) return;
 
-  const [visits, events, games, messages, pins, total] = await Promise.all([
+  const [visits, events, games, messages, pins, total, hq, hqa] = await Promise.all([
     db.from('visits').select('*').order('opened_at', { ascending: false }).limit(200),
     db.from('events').select('*').order('created_at', { ascending: false }).limit(200),
     db.from('game_results').select('*').order('created_at', { ascending: false }).limit(100),
     db.from('messages').select('*').order('created_at', { ascending: false }).limit(100),
     db.from('pins').select('*').order('created_at', { ascending: false }).limit(20),
-    db.from('visits').select('id', { count: 'exact', head: true })
+    db.from('visits').select('id', { count: 'exact', head: true }),
+    db.from('her_quizzes').select('id, questions, updated_at').order('updated_at', { ascending: false }).limit(5),
+    db.from('her_quiz_attempts').select('quiz_id, score, total, created_at').order('created_at', { ascending: false }).limit(30)
   ]);
 
   const v = visits.data || [];
@@ -32,6 +34,8 @@ export default async function handler(req, res) {
     events:   events.data   || [],
     games:    games.data    || [],
     messages: messages.data || [],
-    pins:     pins.data     || []
+    pins:     pins.data     || [],
+    her_quizzes: (hq.data || []).map(q => ({ id: q.id, count: (q.questions || []).length, updated_at: q.updated_at })),
+    her_quiz_attempts: hqa.data || []
   });
 }

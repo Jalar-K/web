@@ -4,15 +4,43 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0d1030">
-<title>For Lizzie</title>
+<title>For you</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%}
-:root{--horizon:#2a2350;--sky:#0d1030;--deep:#05060f;--accent:#e9d5ff;--ink:#f3eefc;
-  --starop:1;--card:rgba(255,255,255,.07);--line:rgba(255,255,255,.16)}
-body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--ink);
-  background:var(--deep);-webkit-font-smoothing:antialiased;transition:color 1.5s;overflow-x:hidden}
+
+/* Sky colours change through the day (set from JS).
+   Text colours do NOT — they come from one of two fixed themes below,
+   picked by how bright the sky is, so text is always readable. */
+:root{--horizon:#2a2350;--sky:#0d1030;--deep:#05060f;--accent:#e9d5ff;--starop:1}
+
+:root,[data-theme="night"]{
+  --text:#f5f3ff; --muted:#c9c5e3; --faint:#9e9abd;
+  --surface:rgba(16,18,44,.84); --surface-2:rgba(255,255,255,.06); --field:rgba(255,255,255,.07);
+  --border:rgba(255,255,255,.14); --border-strong:rgba(255,255,255,.32);
+  --btn-bg:#ede9fe; --btn-ink:#15123a; --btn-hover:#ffffff;
+  --mark:var(--accent); --mark-ink:#15123a;
+  --ok:#86efac; --ok-bg:rgba(134,239,172,.14); --bad:#fca5a5; --bad-bg:rgba(252,165,165,.12);
+  --stage:#080918; --sheet:#14163a;
+  --halo:0 1px 14px rgba(0,0,0,.55);
+  --star:#ffe9a8; --star-glow:#ffd76a;
+}
+[data-theme="day"]{
+  --text:#111827; --muted:#3f4757; --faint:#6b7280;
+  --surface:rgba(255,255,255,.92); --surface-2:rgba(15,23,42,.04); --field:#ffffff;
+  --border:rgba(15,23,42,.12); --border-strong:rgba(15,23,42,.32);
+  --btn-bg:#1f2937; --btn-ink:#ffffff; --btn-hover:#111827;
+  --mark:#c2600a; --mark-ink:#ffffff;
+  --ok:#15803d; --ok-bg:rgba(21,128,61,.09); --bad:#b91c1c; --bad-bg:rgba(185,28,28,.08);
+  --stage:#f6f8fb; --sheet:#ffffff;
+  --halo:0 1px 12px rgba(255,255,255,.7);
+  --star:#e07a00; --star-glow:rgba(255,190,90,.6);
+}
+
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--text);
+  background:var(--deep);-webkit-font-smoothing:antialiased;overflow-x:hidden;font-size:15px;line-height:1.5}
 body.locked{overflow:hidden}
+button{font:inherit;color:inherit}
 
 /* ---- sky ---- */
 #sky{position:fixed;inset:0;z-index:-3;transition:background 2.5s linear;
@@ -28,115 +56,167 @@ body.locked{overflow:hidden}
 #orb.sun #shade{display:none}
 
 /* ---- page ---- */
-#app{position:relative;max-width:460px;margin:0 auto;padding:34px 20px 50px}
-#greet{font-family:Georgia,'Times New Roman',serif;font-size:21px;line-height:1.45;
-  font-style:italic;text-align:center;min-height:62px}
-#clock{text-align:center;font-size:12px;letter-spacing:.16em;text-transform:uppercase;opacity:.55;margin-top:10px}
-.card{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:20px;
-  backdrop-filter:blur(9px);-webkit-backdrop-filter:blur(9px)}
+#app{position:relative;max-width:460px;margin:0 auto;padding:36px 18px 48px}
+#greet{font-family:Georgia,'Times New Roman',serif;font-size:22px;line-height:1.4;font-style:italic;
+  text-align:center;min-height:62px;text-shadow:var(--halo);font-weight:500}
+#clock{text-align:center;font-size:12px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;
+  margin-top:10px;text-shadow:var(--halo)}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:20px;
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);box-shadow:0 8px 30px rgba(0,0,0,.12)}
 #quotecard{margin-top:24px}
 #quote{text-align:center;font-family:Georgia,serif;font-size:17px;line-height:1.6;font-style:italic}
-#tiles{margin-top:22px;display:grid;gap:10px}
+#tiles{margin-top:16px;display:grid;gap:8px}
 .tile{display:flex;align-items:center;gap:14px;width:100%;text-align:left;cursor:pointer;
-  background:var(--card);border:1px solid var(--line);border-radius:18px;padding:14px 16px;
-  color:var(--ink);font:inherit;font-size:15px;transition:transform .15s}
-.tile:active{transform:scale(.98)}
+  background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:13px 16px;
+  font-size:15px;font-weight:600;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  transition:transform .2s ease,border-color .2s ease,background .2s ease}
+.tile:hover{border-color:var(--border-strong);transform:translateY(-1px)}
+.tile:active{transform:scale(.985)}
 .tile .ic{width:38px;height:38px;flex:0 0 38px;border-radius:50%;display:grid;place-items:center;
-  background:var(--accent);color:#1b1335;font-size:17px}
-.tile small{display:block;opacity:.6;font-size:12.5px;margin-top:2px}
-.tile .tick{margin-left:auto;opacity:.8;font-size:13px}
-#note{margin-top:26px}
-#note h2{font-family:Georgia,serif;font-weight:400;font-size:19px;margin-bottom:12px}
-textarea{width:100%;height:112px;resize:vertical;border-radius:14px;border:1px solid var(--line);
-  background:rgba(255,255,255,.09);color:var(--ink);font:inherit;font-size:16px;padding:12px;outline:none}
-textarea:focus{border-color:var(--accent)}
+  background:var(--mark);color:var(--mark-ink);font-size:17px;font-weight:700}
+.tile small{display:block;color:var(--muted);font-size:13px;font-weight:400;margin-top:1px}
+.tile .tick{margin-left:auto;color:var(--ok);font-size:14px;font-weight:700}
+.tile.new .tag{margin-left:auto;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+  padding:3px 8px;border-radius:999px;background:var(--mark);color:var(--mark-ink)}
+#note{margin-top:24px}
+h2.h{font-family:Georgia,serif;font-weight:400;font-size:20px;margin-bottom:12px}
+.field{width:100%;border-radius:12px;border:1px solid var(--border);background:var(--field);color:var(--text);
+  font:inherit;font-size:16px;padding:11px 13px;outline:none;transition:border-color .2s,box-shadow .2s}
+.field::placeholder{color:var(--faint)}
+.field:focus{border-color:var(--border-strong);box-shadow:0 0 0 3px var(--surface-2)}
+textarea.field{height:112px;resize:vertical;display:block}
 .row{display:flex;align-items:center;justify-content:space-between;margin-top:8px;
-  font-size:12.5px;opacity:.72;min-height:20px}
-button.primary{margin-top:12px;width:100%;padding:14px;border-radius:999px;border:none;cursor:pointer;
-  background:var(--accent);color:#1b1335;font:inherit;font-size:16px;font-weight:600}
-button.primary:disabled{opacity:.5}
-.link{background:none;border:none;color:inherit;font:inherit;font-size:12.5px;
-  text-decoration:underline;opacity:.75;cursor:pointer;padding:0}
-.fine{margin-top:10px;font-size:12px;line-height:1.5;opacity:.6}
-footer{margin-top:28px;display:grid;gap:12px;justify-items:center}
+  font-size:13px;color:var(--muted);min-height:20px}
+button.primary{margin-top:12px;width:100%;padding:13px 16px;border-radius:999px;border:none;cursor:pointer;
+  background:var(--btn-bg);color:var(--btn-ink);font-size:15px;font-weight:600;transition:background .2s,transform .15s}
+button.primary:hover{background:var(--btn-hover)}
+button.primary:active{transform:scale(.985)}
+button.primary:disabled{opacity:.55;cursor:default}
+button.ghost{margin-top:10px;width:100%;padding:12px 16px;border-radius:999px;cursor:pointer;
+  background:none;border:1px solid var(--border-strong);font-size:15px;font-weight:600;transition:background .2s}
+button.ghost:hover{background:var(--surface-2)}
+.link{background:none;border:none;font-size:13px;color:var(--muted);text-decoration:underline;
+  text-underline-offset:3px;cursor:pointer;padding:0;transition:color .2s}
+.link:hover{color:var(--text)}
+.fine{margin-top:10px;font-size:13px;line-height:1.55;color:var(--muted)}
+footer{margin-top:22px;display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+footer .pill{display:inline-flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--border);
+  border-radius:999px;padding:7px 14px;font-size:13px;color:var(--text);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+footer .pill .link{color:var(--text)}
 
 /* ---- game stage ---- */
-#stage{position:fixed;inset:0;z-index:40;display:none;flex-direction:column;
-  background:linear-gradient(rgba(5,6,15,.5),rgba(5,6,15,.82));backdrop-filter:blur(3px)}
+#stage{position:fixed;inset:0;z-index:40;display:none;flex-direction:column;background:var(--stage);color:var(--text)}
 #stage.on{display:flex}
-#stagebar{display:flex;align-items:center;gap:12px;padding:16px 18px}
-#stagetitle{font-size:15px;font-weight:600;flex:1}
-#close{background:none;border:1px solid var(--line);border-radius:50%;width:34px;height:34px;
-  color:var(--ink);font-size:19px;cursor:pointer;line-height:1}
-#stagebody{flex:1;position:relative;overflow:hidden;padding:0 18px 24px}
-.hud{display:flex;align-items:center;justify-content:space-between;font-size:13px;opacity:.75;margin-bottom:12px}
+#stagebar{display:flex;align-items:center;gap:12px;padding:14px 18px;border-bottom:1px solid var(--border)}
+#stagetitle{font-size:16px;font-weight:700;flex:1}
+#close{background:none;border:1px solid var(--border-strong);border-radius:50%;width:36px;height:36px;
+  font-size:20px;cursor:pointer;line-height:1;transition:background .2s}
+#close:hover{background:var(--surface-2)}
+#stagebody{flex:1;position:relative;overflow:hidden;padding:16px 18px 24px}
+#stagebody.scroll{overflow-y:auto;-webkit-overflow-scrolling:touch}
+.wrap{max-width:460px;margin:0 auto}
+.hud{display:flex;align-items:center;justify-content:space-between;font-size:14px;font-weight:600;
+  color:var(--muted);margin-bottom:14px}
 .say{position:absolute;left:18px;right:18px;bottom:26px;text-align:center;font-family:Georgia,serif;
-  font-style:italic;font-size:17px;line-height:1.5;opacity:0;transition:opacity .5s;pointer-events:none}
+  font-style:italic;font-size:18px;line-height:1.5;opacity:0;transition:opacity .5s;pointer-events:none}
 .say.on{opacity:1}
 #finish{position:absolute;inset:0;display:grid;place-items:center;text-align:center;padding:24px}
-#finish h4{font-family:Georgia,serif;font-weight:400;font-size:25px;margin-bottom:10px}
-#finish p{opacity:.8;font-size:15px;line-height:1.6;margin-bottom:22px}
+#finish h4{font-family:Georgia,serif;font-weight:400;font-size:26px;margin-bottom:8px}
+#finish p{color:var(--muted);font-size:15px;line-height:1.6;margin-bottom:20px}
 
 /* catch the light */
 #s-field{position:absolute;inset:0}
 .fstar{position:absolute;top:-70px;width:56px;height:56px;border:none;background:none;padding:0;
-  color:#ffe9a8;font-size:30px;cursor:pointer;animation:fall linear forwards;
-  text-shadow:0 0 14px #ffd76a,0 0 30px #ffb84d}
+  color:var(--star);font-size:30px;cursor:pointer;animation:fall linear forwards;
+  text-shadow:0 0 14px var(--star-glow),0 0 30px var(--star-glow)}
 @keyframes fall{to{transform:translateY(calc(100vh + 150px)) rotate(200deg)}}
-.moonbar{width:64px;height:8px;border-radius:999px;border:1px solid var(--line);overflow:hidden;position:relative}
-.moonbar i{position:absolute;inset:0 auto 0 0;width:0;background:var(--accent);transition:width .4s}
-.spark{position:fixed;width:6px;height:6px;border-radius:50%;background:#ffe9a8;z-index:60;
-  box-shadow:0 0 10px #ffd76a;pointer-events:none;animation:pop .75s ease-out forwards}
+.moonbar{width:72px;height:8px;border-radius:999px;border:1px solid var(--border-strong);overflow:hidden;position:relative}
+.moonbar i{position:absolute;inset:0 auto 0 0;width:0;background:var(--mark);transition:width .4s}
+.spark{position:fixed;width:6px;height:6px;border-radius:50%;background:var(--star);z-index:60;
+  box-shadow:0 0 10px var(--star-glow);pointer-events:none;animation:pop .75s ease-out forwards}
 @keyframes pop{to{transform:translate(var(--x),var(--y)) scale(.2);opacity:0}}
 
 /* join the dots */
 #c-field{position:absolute;inset:0}
 #c-svg{position:absolute;inset:0;width:100%;height:100%}
-.cline{stroke:var(--accent);stroke-width:1.6;vector-effect:non-scaling-stroke;stroke-linecap:round;opacity:.85}
+.cline{stroke:var(--mark);stroke-width:2;vector-effect:non-scaling-stroke;stroke-linecap:round}
 .cdot{position:absolute;width:40px;height:40px;margin:-20px 0 0 -20px;border-radius:50%;padding:0;
-  border:1px solid var(--line);background:rgba(255,255,255,.14);cursor:pointer}
-.cdot.next{animation:ping 1.6s infinite}
-.cdot.lit{background:var(--accent);border-color:var(--accent);box-shadow:0 0 18px var(--accent)}
-.cdot.wrong{animation:shake .35s}
-@keyframes ping{0%{box-shadow:0 0 0 0 rgba(255,233,168,.55)}70%{box-shadow:0 0 0 15px rgba(255,233,168,0)}
-  100%{box-shadow:0 0 0 0 rgba(255,233,168,0)}}
+  border:2px solid var(--border-strong);background:var(--surface-2);cursor:pointer}
+.cdot.next{animation:ping 1.6s infinite;border-color:var(--mark)}
+.cdot.lit{background:var(--mark);border-color:var(--mark);box-shadow:0 0 16px var(--mark)}
+.cdot.wrong{animation:shake .35s;border-color:var(--bad)}
+@keyframes ping{0%{box-shadow:0 0 0 0 rgba(255,200,120,.55)}70%{box-shadow:0 0 0 15px rgba(255,200,120,0)}
+  100%{box-shadow:0 0 0 0 rgba(255,200,120,0)}}
 @keyframes shake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
 
 /* moon pairs */
 #p-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-width:320px;margin:0 auto}
 .pcard{position:relative;aspect-ratio:3/4;border-radius:14px;padding:0;cursor:pointer;
-  border:1px solid var(--line);background:var(--card);color:var(--ink)}
+  border:1px solid var(--border-strong);background:var(--surface-2);transition:background .2s}
 .pback,.pface{position:absolute;inset:0;display:grid;place-items:center;transition:opacity .25s}
 .pface{opacity:0;font-size:27px}
-.pback{opacity:.45;font-size:17px}
+.pback{color:var(--faint);font-size:17px}
 .pcard.on .pface,.pcard.done .pface{opacity:1}
 .pcard.on .pback,.pcard.done .pback{opacity:0}
-.pcard.done{background:var(--accent);border-color:var(--accent)}
+.pcard.done{background:var(--mark);border-color:var(--mark)}
 
 /* breathe */
 #b-wrap{position:absolute;inset:0;display:grid;place-items:center}
 #b-ring{width:min(62vw,230px);aspect-ratio:1;border-radius:50%;display:grid;place-items:center;
-  border:1px solid var(--accent);transition:transform linear;font-family:Georgia,serif;
-  font-size:19px;font-style:italic;background:radial-gradient(circle,rgba(255,255,255,.15),transparent 70%)}
+  border:2px solid var(--mark);transition:transform linear;font-family:Georgia,serif;
+  font-size:20px;font-style:italic;background:var(--surface-2)}
 
 /* quiz */
-.q-text{font-family:Georgia,serif;font-size:19px;line-height:1.5;margin-bottom:18px}
-.q-opts{display:grid;gap:9px}
-.q-opt{text-align:left;padding:13px 15px;border-radius:14px;cursor:pointer;
-  border:1px solid var(--line);background:var(--card);color:var(--ink);font:inherit;font-size:15px}
-.q-opt.right{background:rgba(134,239,172,.26);border-color:rgba(134,239,172,.7)}
-.q-opt.wrong{background:rgba(252,165,165,.2);border-color:rgba(252,165,165,.6)}
+.q-text{font-family:Georgia,serif;font-size:20px;line-height:1.45;margin-bottom:18px}
+.q-opts{display:grid;gap:8px}
+.q-opt{text-align:left;padding:13px 15px;border-radius:14px;cursor:pointer;font-size:15px;
+  border:1px solid var(--border-strong);background:var(--surface-2);transition:border-color .2s,background .2s}
+.q-opt:hover:not(:disabled){border-color:var(--text)}
+.q-opt:disabled{cursor:default}
+.q-opt.right{background:var(--ok-bg);border-color:var(--ok);font-weight:600}
+.q-opt.right::after{content:'  ✓';color:var(--ok)}
+.q-opt.wrong{background:var(--bad-bg);border-color:var(--bad)}
+.q-opt.wrong::after{content:'  ✕';color:var(--bad)}
+
+/* quiz-me-back builder */
+.lead{font-size:15px;color:var(--muted);margin-bottom:16px}
+.qb{border:1px solid var(--border);border-radius:16px;padding:14px;margin-bottom:12px;background:var(--surface-2)}
+.qb-head{display:flex;align-items:center;gap:14px;margin-bottom:10px}
+.qb-n{font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);flex:1}
+.qb .field{font-size:15px}
+.qb-opts{display:grid;gap:8px;margin-top:10px}
+.opt-row{display:flex;align-items:center;gap:10px}
+.pick{width:26px;height:26px;flex:0 0 26px;border-radius:50%;border:2px solid var(--border-strong);
+  background:none;cursor:pointer;display:grid;place-items:center;font-size:13px;font-weight:700;
+  color:transparent;transition:background .2s,border-color .2s}
+.pick:hover{border-color:var(--ok)}
+.pick.on{background:var(--ok);border-color:var(--ok);color:var(--stage)}
+.hint{font-size:12.5px;color:var(--faint);margin-top:8px}
+.err{color:var(--bad);font-size:14px;font-weight:600;min-height:20px;margin-top:10px}
+.panel{border:1px solid var(--border);border-radius:16px;padding:16px;margin-bottom:12px;background:var(--surface-2)}
+.eyebrow{font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.big{font-size:40px;font-weight:700;letter-spacing:-.02em;line-height:1.1;margin:6px 0 2px}
+.big small{font-size:18px;font-weight:600;color:var(--muted)}
+.rv{border-top:1px solid var(--border);padding:11px 0}
+.rv:first-of-type{border-top:none}
+.rv b{display:block;font-size:14.5px;margin-bottom:3px}
+.rv span{display:block;font-size:13.5px;color:var(--muted)}
+.rv .y{color:var(--ok);font-weight:600}
+.rv .n{color:var(--bad);font-weight:600}
+.hist{display:flex;justify-content:space-between;font-size:13.5px;padding:6px 0;border-top:1px solid var(--border);color:var(--muted)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.two button.ghost{margin-top:8px}
 
 /* sheet + toast */
 #sheet{position:fixed;inset:0;z-index:50;display:none;align-items:flex-end;background:rgba(0,0,0,.55)}
 #sheet.on{display:flex}
 #sheet .card{width:100%;max-width:460px;margin:0 auto;border-radius:22px 22px 0 0;max-height:82vh;
-  overflow:auto;background:#141235;border-color:rgba(255,255,255,.14);color:#f3eefc}
+  overflow:auto;background:var(--sheet)}
 #sheet h3{font-family:Georgia,serif;font-weight:400;font-size:20px;margin-bottom:12px}
-#sheet li{margin:0 0 9px 18px;font-size:14px;line-height:1.55;opacity:.85}
+#sheet li{margin:0 0 9px 18px;font-size:14.5px;line-height:1.55}
 #toast{position:fixed;left:50%;bottom:26px;z-index:70;transform:translate(-50%,20px);opacity:0;
-  background:rgba(20,18,50,.94);color:#f3eefc;border:1px solid rgba(255,255,255,.18);
-  padding:10px 16px;border-radius:999px;font-size:13.5px;transition:.3s;pointer-events:none}
+  background:#111827;color:#fff;border:1px solid rgba(255,255,255,.18);
+  padding:10px 16px;border-radius:999px;font-size:14px;font-weight:500;transition:.3s;pointer-events:none}
 #toast.on{opacity:1;transform:translate(-50%,0)}
 @media(prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.15s!important}}
 </style>
@@ -156,20 +236,20 @@ footer{margin-top:28px;display:grid;gap:12px;justify-items:center}
   <div id="tiles"></div>
 
   <section class="card" id="note">
-    <h2>Say something back</h2>
-    <textarea id="msg-text" maxlength="1000" placeholder="Anything you want to tell me…"></textarea>
+    <h2 class="h">Say something back</h2>
+    <textarea class="field" id="msg-text" maxlength="1000" placeholder="Anything you want to tell me…"></textarea>
     <div class="row">
       <span id="msg-saved">Drafts stay on this phone</span>
       <button class="link" id="msg-clear">Clear</button>
     </div>
-    <button class="primary" id="msg-send">Send to Kendrick</button>
+    <button class="primary" id="msg-send">Send it</button>
     <p class="fine">Nothing leaves this page until you tap Send. If you close the tab, whatever you
     wrote will still be waiting here next time.</p>
   </section>
 
   <footer>
-    <div id="loc-row"></div>
-    <button class="link" id="about-btn">What this page remembers</button>
+    <div class="pill" id="loc-row"></div>
+    <div class="pill"><button class="link" id="about-btn">What this page remembers</button></div>
   </footer>
 </main>
 
@@ -185,26 +265,43 @@ footer{margin-top:28px;display:grid;gap:12px;justify-items:center}
     <li>Your city and country, worked out roughly from your internet connection — never a street or an address.</li>
     <li>Which games you played and how you did.</li>
     <li>Messages you send, once you tap Send.</li>
+    <li>Questions you write for me, once you tap Save.</li>
     <li>Your exact location only if you tap the button, and only until you tap Undo.</li>
   </ul>
-  <p class="fine">Anything you type and don't send stays on this phone. Kendrick never sees it.</p>
+  <p class="fine">Anything you type and don't send stays on this phone. I never see it.</p>
   <button class="primary" id="sheet-close">Close</button>
 </div></div>
 
 <div id="toast"></div>
 <script>
-/* ============ CHANGE THESE FIVE LINES ============ */
+/* ================= SETTINGS ================= */
 const CFG = {
-  NAME:  "Lizzie",
-  FROM:  "Kendrick",
-  PHONE: "256760506463",                      // international, no + and no spaces
-  API:   "https://web-server-rose.vercel.app/",  // your Vercel URL, no trailing slash
+  PHONE: "256760506463",                         // your WhatsApp: international, no + and no spaces
+  API:   "https://web-server-rose.vercel.app",   // your Vercel server URL
   QUIZ_TITLE: "Do you know me?"
 };
-/* ================================================= */
+
+/* ========== "DO YOU KNOW ME?" QUESTIONS — EDIT THESE ==========
+   One line per question:
+     q = the question
+     a = the four answer choices
+     c = which choice is correct, counting from 0
+         (0 = first, 1 = second, 2 = third, 3 = fourth)
+   Add or delete whole lines freely — the score adjusts itself.            */
+const QUIZ = [
+  { q:"What do I always end up ordering?",          a:["Chicken and chips","Rolex","Pilau","Whatever you're having"],   c:3 },
+  { q:"Where did we first properly talk?",          a:["A party","Online","At work","A friend's place"],                c:1 },
+  { q:"What time do I actually fall asleep?",       a:["Before 10","Around midnight","2am","Nobody knows"],             c:2 },
+  { q:"The one thing I'm genuinely bad at?",        a:["Directions","Cooking","Being on time","Keeping plants alive"],  c:2 },
+  { q:"My go-to song when nobody's listening?",     a:["Something old","Something embarrassing","Afrobeats","Gospel"],  c:1 },
+  { q:"What makes me laugh every single time?",     a:["Bad puns","You tripping over nothing","Memes","My own jokes"],  c:3 },
+  { q:"How would I spend a whole day off?",         a:["At the lake","Sleeping in","A long drive","Anywhere with you"], c:3 },
+  { q:"What do I say when you tell me you're fine?",a:["Okay","I don't believe you","Nothing","Talk to me"],            c:3 }
+];
+/* ============================================================== */
 
 const $ = s => document.querySelector(s);
-const N = CFG.NAME, F = CFG.FROM;
+const API = CFG.API.replace(/\/+$/, '');
 
 /* ---------- session ---------- */
 function uuid(){
@@ -212,35 +309,52 @@ function uuid(){
   return '10000000-1000-4000-8000-100000000000'.replace(/[018]/g, c =>
     (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c/4).toString(16));
 }
-if (!localStorage.getItem('sl_sid')) localStorage.setItem('sl_sid', uuid());
-const SID = localStorage.getItem('sl_sid');
+const store = {
+  get(k){ try { return localStorage.getItem(k); } catch(e){ return null; } },
+  set(k, v){ try { localStorage.setItem(k, v); } catch(e){} },
+  del(k){ try { localStorage.removeItem(k); } catch(e){} }
+};
+if (!store.get('sl_sid')) store.set('sl_sid', uuid());
+const SID = store.get('sl_sid') || uuid();
 
-const api = (path, data) => fetch(CFG.API + path, {
+const api = (path, data) => fetch(API + path, {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify({ session_id: SID, ...data }),
   keepalive: true
 }).catch(() => null);
 
+async function apiJson(path, opts){
+  const r = await fetch(API + path, opts);
+  let j = {};
+  try { j = await r.json(); } catch(e){}
+  if (!r.ok) { const err = new Error(j.error || ('HTTP ' + r.status)); err.status = r.status; throw err; }
+  return j;
+}
+
 const track = (type, payload) => api('/api/event', { type, payload: payload || {} });
 
-/* ---------- the hour engine ---------- */
+/* ---------- the hour engine (sky only) ---------- */
 const KEYS = [
-  {h:0, horizon:'#2a2350', sky:'#0d1030', deep:'#05060f', accent:'#e9d5ff', ink:'#f3eefc', dark:1.00},
-  {h:3, horizon:'#1b1740', sky:'#080b22', deep:'#03040c', accent:'#c7d2fe', ink:'#e8e6f5', dark:1.00},
-  {h:5, horizon:'#3b3470', sky:'#141a3e', deep:'#070a1c', accent:'#fbcfe8', ink:'#f2eefb', dark:0.85},
-  {h:6, horizon:'#f0a07a', sky:'#5b4a8a', deep:'#1b1b3a', accent:'#ffd9b0', ink:'#fff6ea', dark:0.42},
-  {h:8, horizon:'#ffd9a0', sky:'#8ec5e8', deep:'#3a6ea5', accent:'#ffb46b', ink:'#10233a', dark:0.06},
-  {h:12,horizon:'#ffffff', sky:'#bfe4ff', deep:'#5aa0e0', accent:'#f6a93b', ink:'#0d2236', dark:0.00},
-  {h:16,horizon:'#ffe3b0', sky:'#9fd0f0', deep:'#4f8fc7', accent:'#ef8c3a', ink:'#10243a', dark:0.06},
-  {h:18,horizon:'#ff9d6e', sky:'#b06a9a', deep:'#3d2a5e', accent:'#ffd39b', ink:'#fff3e6', dark:0.40},
-  {h:20,horizon:'#6b4a8f', sky:'#2a2356', deep:'#0f1030', accent:'#ffe9a8', ink:'#f5eefc', dark:0.85},
-  {h:22,horizon:'#3a2d66', sky:'#121437', deep:'#07081a', accent:'#e9d5ff', ink:'#f3eefc', dark:1.00},
-  {h:24,horizon:'#2a2350', sky:'#0d1030', deep:'#05060f', accent:'#e9d5ff', ink:'#f3eefc', dark:1.00}
+  {h:0, horizon:'#2a2350', sky:'#0d1030', deep:'#05060f', accent:'#e9d5ff', dark:1.00},
+  {h:3, horizon:'#1b1740', sky:'#080b22', deep:'#03040c', accent:'#c7d2fe', dark:1.00},
+  {h:5, horizon:'#3b3470', sky:'#141a3e', deep:'#070a1c', accent:'#fbcfe8', dark:0.85},
+  {h:6, horizon:'#f0a07a', sky:'#5b4a8a', deep:'#1b1b3a', accent:'#ffd9b0', dark:0.42},
+  {h:8, horizon:'#ffe2b0', sky:'#a9d5f2', deep:'#7db4e2', accent:'#ffb46b', dark:0.06},
+  {h:12,horizon:'#ffffff', sky:'#cdeaff', deep:'#8ec6f0', accent:'#f6a93b', dark:0.00},
+  {h:16,horizon:'#ffe8bd', sky:'#b4dcf4', deep:'#7fb4de', accent:'#ef8c3a', dark:0.06},
+  {h:18,horizon:'#ff9d6e', sky:'#b06a9a', deep:'#3d2a5e', accent:'#ffd39b', dark:0.40},
+  {h:20,horizon:'#6b4a8f', sky:'#2a2356', deep:'#0f1030', accent:'#ffe9a8', dark:0.85},
+  {h:22,horizon:'#3a2d66', sky:'#121437', deep:'#07081a', accent:'#e9d5ff', dark:1.00},
+  {h:24,horizon:'#2a2350', sky:'#0d1030', deep:'#05060f', accent:'#e9d5ff', dark:1.00}
 ];
 const rgb = h => [1,3,5].map(i => parseInt(h.slice(i, i+2), 16));
 const hex = c => '#' + c.map(v => Math.round(v).toString(16).padStart(2,'0')).join('');
 const mix = (a,b,t) => hex(rgb(a).map((v,i) => v + (rgb(b)[i] - v) * t));
+function lum(h){
+  const [r,g,b] = rgb(h).map(v => { v /= 255; return v <= .03928 ? v/12.92 : Math.pow((v+.055)/1.055, 2.4); });
+  return .2126*r + .7152*g + .0722*b;
+}
 
 function palette(now){
   const t = now.getHours() + now.getMinutes()/60;
@@ -250,33 +364,33 @@ function palette(now){
   return {
     t,
     horizon: mix(a.horizon, b.horizon, f), sky: mix(a.sky, b.sky, f), deep: mix(a.deep, b.deep, f),
-    accent:  mix(a.accent,  b.accent,  f), ink: mix(a.ink, b.ink, f),
+    accent:  mix(a.accent,  b.accent,  f),
     dark: a.dark + (b.dark - a.dark) * f
   };
 }
 
 const HOURS = [
-  "Midnight, "+N+". The whole world has gone quiet for you.",
+  "Midnight. The whole world has gone quiet for you.",
   "1am. Nothing good ever gets decided this late.",
   "2am and still awake? Come on, love.",
   "3am. Even the stars are yawning.",
   "4am. Whatever it is, it will still be there after you rest.",
   "5am — you are up before the sun again.",
-  "Dawn, "+N+". Soft start. No rush.",
+  "Dawn. Soft start. No rush.",
   "Good morning, sunshine.",
-  "Morning, "+N+". Take the first hour slowly.",
+  "Morning. Take the first hour slowly.",
   "9am — hope the coffee is good.",
   "Mid-morning, and you are doing fine.",
   "Almost noon. Don't forget to eat something.",
-  "Noon, "+N+". Pause for a second.",
+  "Noon. Pause for a second.",
   "Afternoon. You're halfway there.",
   "The 2pm slump. Drink some water.",
   "3pm. You are allowed a break.",
   "Late afternoon light — my favourite.",
   "5pm. Nearly done.",
-  "Golden hour, "+N+". Look outside if you can.",
+  "Golden hour. Look outside if you can.",
   "Evening. Shoes off, shoulders down.",
-  "Good evening, "+N+".",
+  "Good evening, love.",
   "Winding down? Good.",
   "Getting late. The day has done its worst.",
   "Almost tomorrow. Let's call it a night."
@@ -287,24 +401,34 @@ function moonPhase(ms){
   return ((((ms - ref) / 1000) % LUN) + LUN) % LUN / LUN;   // 0 = new, .5 = full
 }
 
+// for testing: add ?hour=8 to the address to preview another time of day
+const FORCE_HOUR = (() => { const h = parseFloat(new URLSearchParams(location.search).get('hour')); return h >= 0 && h < 24 ? h : null; })();
+function nowish(){
+  const d = new Date();
+  if (FORCE_HOUR != null){ d.setHours(Math.floor(FORCE_HOUR), Math.round((FORCE_HOUR % 1) * 60)); }
+  return d;
+}
+
 function paint(){
-  const now = new Date(), p = palette(now), r = document.documentElement.style, d = p.dark;
+  const now = nowish(), p = palette(now), r = document.documentElement.style, d = p.dark;
   r.setProperty('--horizon', p.horizon); r.setProperty('--sky', p.sky);
   r.setProperty('--deep', p.deep);       r.setProperty('--accent', p.accent);
-  r.setProperty('--ink', p.ink);         r.setProperty('--starop', d.toFixed(2));
-  r.setProperty('--card', 'rgba(255,255,255,' + (0.07 + (1-d) * 0.40).toFixed(3) + ')');
-  r.setProperty('--line', d > .5
-    ? 'rgba(255,255,255,' + (0.08 + d * 0.10).toFixed(3) + ')'
-    : 'rgba(26,38,60,'   + (0.10 + (1-d) * 0.06).toFixed(3) + ')');
+  r.setProperty('--starop', d.toFixed(2));
 
-  const day  = p.t >= 6 && p.t < 18;
-  const prog = day ? (p.t - 6) / 12 : ((p.t + 6) % 24) / 12;
-  const orb  = $('#orb');
-  orb.classList.toggle('sun', day);
+  // pick the text theme from how bright the top of the sky is
+  const top = mix(p.deep, p.sky, .4);
+  const day = lum(top) > 0.2;
+  document.documentElement.dataset.theme = day ? 'day' : 'night';
+  document.querySelector('meta[name=theme-color]').setAttribute('content', p.deep);
+
+  const sunUp = p.t >= 6 && p.t < 18;
+  const prog  = sunUp ? (p.t - 6) / 12 : ((p.t + 6) % 24) / 12;
+  const orb   = $('#orb');
+  orb.classList.toggle('sun', sunUp);
   orb.style.left = (8 + prog * 84) + '%';
-  orb.style.top  = (80 - Math.sin(prog * Math.PI) * 64) + '%';
+  orb.style.top  = (86 - Math.sin(prog * Math.PI) * 52) + '%';   // stays below the greeting
 
-  if (!day){
+  if (!sunUp){
     const ph = moonPhase(now.getTime());
     const illum = (1 - Math.cos(ph * 2 * Math.PI)) / 2;
     $('#shade').style.transform = 'translateX(' + ((ph < .5 ? 1 : -1) * illum * 108) + '%)';
@@ -345,7 +469,7 @@ const Quotes = {
   used: new Set(),
   async load(hour){
     try {
-      const r = await fetch(CFG.API + '/api/quotes?hour=' + hour);
+      const r = await fetch(API + '/api/quotes?hour=' + hour);
       const j = await r.json();
       if (j.quotes && j.quotes.length) this.pool = j.quotes;
     } catch(e) {}
@@ -389,6 +513,13 @@ function sayer(host, sel){
     t = setTimeout(() => e.classList.remove('on'), 2800);
   };
 }
+function el(tag, cls, text){
+  const e = document.createElement(tag);
+  if (cls) e.className = cls;
+  if (text != null) e.textContent = text;
+  return e;
+}
+const fmtWhen = t => new Date(t).toLocaleString([], { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' });
 
 /* ---------- GAME 1 · catch the light ---------- */
 function runStars(host, done){
@@ -403,7 +534,7 @@ function runStars(host, done){
     if (!live) return;
     const s = document.createElement('button');
     s.className = 'fstar';
-    s.textContent = '\u2726';
+    s.textContent = '✦';
     s.style.left = (5 + Math.random() * 80) + '%';
     s.style.animationDuration = (3.4 + Math.random() * 2.2) + 's';
     s.addEventListener('pointerdown', e => { e.preventDefault(); hit(s); }, { once: true });
@@ -432,9 +563,9 @@ function runStars(host, done){
 
 /* ---------- GAME 2 · join the dots ---------- */
 const SHAPES = [
-  { name:'The Crescent', pts:[[.30,.22],[.21,.36],[.18,.52],[.25,.67],[.40,.76],[.56,.76]] },
-  { name:'The Heart',    pts:[[.34,.30],[.26,.42],[.33,.57],[.50,.73],[.67,.57],[.74,.42],[.66,.30],[.50,.38]] },
-  { name:'Her Letter',   pts:[[.34,.22],[.34,.44],[.34,.66],[.52,.66],[.70,.66]] }
+  { name:'The Crescent',  pts:[[.30,.22],[.21,.36],[.18,.52],[.25,.67],[.40,.76],[.56,.76]] },
+  { name:'The Heart',     pts:[[.34,.30],[.26,.42],[.33,.57],[.50,.73],[.67,.57],[.74,.42],[.66,.30],[.50,.38]] },
+  { name:'Cassiopeia',    pts:[[.16,.36],[.33,.62],[.50,.42],[.67,.62],[.84,.36]] }
 ];
 function runConstellation(host, done){
   host.innerHTML =
@@ -497,7 +628,7 @@ function runConstellation(host, done){
 
 /* ---------- GAME 3 · moon pairs ---------- */
 function runPairs(host, done){
-  const FACES = ['\u{1F319}','\u2B50','\u{1F4A4}','\u{1F338}','\u{1F30A}','\u{1F375}'];
+  const FACES = ['\u{1F319}','⭐','\u{1F4A4}','\u{1F338}','\u{1F30A}','\u{1F375}'];
   const deck = FACES.concat(FACES).sort(() => Math.random() - .5);
   let open = [], found = 0, taps = 0, lock = false, timers = [];
 
@@ -510,7 +641,7 @@ function runPairs(host, done){
   deck.forEach(face => {
     const c = document.createElement('button');
     c.className = 'pcard'; c.dataset.face = face;
-    c.innerHTML = '<span class="pback">\u2726</span><span class="pface">' + face + '</span>';
+    c.innerHTML = '<span class="pback">✦</span><span class="pface">' + face + '</span>';
     c.addEventListener('click', () => flip(c));
     grid.appendChild(c);
   });
@@ -574,22 +705,11 @@ function runBreathe(host, done){
   return () => clearTimeout(timer);
 }
 
-/* ---------- GAME 5 · the quiz ----------
-   Swap these for real ones about you. c = index of the correct answer, counting from 0. */
-const QUIZ = [
-  { q:"What do I always end up ordering?",          a:["Chicken and chips","Rolex","Pilau","Whatever you're having"],   c:3 },
-  { q:"Where did we first properly talk?",          a:["A party","Online","At work","A friend's place"],                c:1 },
-  { q:"What time do I actually fall asleep?",       a:["Before 10","Around midnight","2am","Nobody knows"],             c:2 },
-  { q:"The one thing I'm genuinely bad at?",        a:["Directions","Cooking","Being on time","Keeping plants alive"],  c:2 },
-  { q:"My go-to song when nobody's listening?",     a:["Something old","Something embarrassing","Afrobeats","Gospel"],  c:1 },
-  { q:"What makes me laugh every single time?",     a:["Bad puns","You tripping over nothing","Memes","My own jokes"],  c:3 },
-  { q:"How would I spend a whole day off?",         a:["At the lake","Sleeping in","A long drive","Anywhere with you"], c:3 },
-  { q:"What do I say when you tell me you're fine?",a:["Okay","I don't believe you","Nothing","Talk to me"],            c:3 }
-];
+/* ---------- GAME 5 · do you know me? (questions are at the top) ---------- */
 function runQuiz(host, done){
   let i = 0, score = 0, picks = [], t0 = Date.now(), timers = [];
-  host.innerHTML = '<div class="hud"><span>' + CFG.QUIZ_TITLE + '</span><span id="q-step"></span></div>' +
-                   '<div id="q-card"></div>';
+  host.innerHTML = '<div class="wrap"><div class="hud"><span>' + CFG.QUIZ_TITLE + '</span><span id="q-step"></span></div>' +
+                   '<div id="q-card"></div></div>';
   const tier = s => {
     const r = s / QUIZ.length;
     if (r === 1)  return 'You know me completely';
@@ -625,22 +745,249 @@ function runQuiz(host, done){
         duration_ms: Date.now() - t0, detail: { picks: picks },
         title: tier(score), text: 'You got ' + score + ' out of ' + QUIZ.length + '.' });
       draw();
-    }, 1200));
+    }, 1300));
   }
   draw();
   return () => timers.forEach(clearTimeout);
 }
 
+/* ---------- 6 · quiz me back (she writes questions, I answer, she sees my score) ---------- */
+const IDEAS = [
+  "What's my favourite food?", "What am I most scared of?", "Which song do I play on repeat?",
+  "Where would I go on my dream holiday?", "What do I always order at a café?", "What's my comfort movie?",
+  "What's my biggest pet peeve?", "What did I want to be as a kid?", "What's my favourite colour?",
+  "How do I spend a lazy Sunday?", "What instantly puts me in a bad mood?", "What's my love language?",
+  "What's my go-to drink?", "Which of my friends do I talk to the most?", "What's my favourite thing about you?"
+];
+const HQ = {
+  draft(){
+    try { const d = JSON.parse(store.get('sl_hq_draft')); if (Array.isArray(d) && d.length) return d; } catch(e){}
+    return [blankQ(), blankQ(), blankQ()];
+  },
+  saveDraft(d){ store.set('sl_hq_draft', JSON.stringify(d)); },
+  id(){ return store.get('sl_hq_id'); },
+  link(id){ return new URL('answer.html?q=' + id, location.href).href; }
+};
+function blankQ(){ return { q:'', a:['','','',''], c:0 }; }
+
+function runHerQuiz(host){
+  host.classList.add('scroll');
+  let draft = HQ.draft();
+  let alive = true;
+
+  function render(view){ host.innerHTML = ''; (view === 'edit' ? edit : results)(); host.scrollTop = 0; }
+
+  /* --- the editor --- */
+  function edit(){
+    const w = el('div', 'wrap');
+    w.appendChild(el('p', 'lead', 'Write questions about you, with the right answer ticked. I answer them on my phone, and my score shows up here.'));
+    const list = el('div'); w.appendChild(list);
+    const add = el('button', 'ghost', '+ Add a question');
+    const save = el('button', 'primary', HQ.id() ? 'Save changes' : 'Save and get my link');
+    const err = el('p', 'err');
+    w.append(add, save, err);
+    if (HQ.id()){
+      const back = el('button', 'ghost', 'Back to my score');
+      back.addEventListener('click', () => render('results'));
+      w.appendChild(back);
+    }
+    host.appendChild(w);
+
+    function draw(){
+      list.innerHTML = '';
+      draft.forEach((item, qi) => {
+        const qb = el('div', 'qb');
+        const head = el('div', 'qb-head');
+        head.appendChild(el('span', 'qb-n', 'Question ' + (qi+1)));
+        const idea = el('button', 'link', 'Give me an idea');
+        idea.addEventListener('click', () => {
+          const used = new Set(draft.map(d => d.q));
+          const pool = IDEAS.filter(x => !used.has(x));
+          item.q = (pool.length ? pool : IDEAS)[Math.floor(Math.random() * (pool.length || IDEAS.length))];
+          qIn.value = item.q; HQ.saveDraft(draft);
+        });
+        head.appendChild(idea);
+        if (draft.length > 1){
+          const del = el('button', 'link', 'Remove');
+          del.addEventListener('click', () => { draft.splice(qi, 1); HQ.saveDraft(draft); draw(); });
+          head.appendChild(del);
+        }
+        qb.appendChild(head);
+
+        const qIn = el('input', 'field');
+        qIn.placeholder = 'Your question'; qIn.maxLength = 200; qIn.value = item.q;
+        qIn.addEventListener('input', () => { item.q = qIn.value; HQ.saveDraft(draft); });
+        qb.appendChild(qIn);
+
+        const opts = el('div', 'qb-opts');
+        item.a.forEach((txt, ai) => {
+          const row = el('div', 'opt-row');
+          const pk = el('button', 'pick' + (item.c === ai ? ' on' : ''), '✓');
+          pk.setAttribute('aria-label', 'Mark answer ' + (ai+1) + ' as correct');
+          pk.addEventListener('click', () => {
+            item.c = ai; HQ.saveDraft(draft);
+            opts.querySelectorAll('.pick').forEach((p, n) => p.classList.toggle('on', n === ai));
+          });
+          const aIn = el('input', 'field');
+          aIn.placeholder = 'Answer ' + (ai+1) + (ai > 1 ? ' (optional)' : '');
+          aIn.maxLength = 120; aIn.value = txt;
+          aIn.addEventListener('input', () => { item.a[ai] = aIn.value; HQ.saveDraft(draft); });
+          row.append(pk, aIn);
+          opts.appendChild(row);
+        });
+        qb.appendChild(opts);
+        qb.appendChild(el('p', 'hint', 'Tap the circle next to the right answer.'));
+        list.appendChild(qb);
+      });
+      add.style.display = draft.length >= 12 ? 'none' : '';
+    }
+    draw();
+
+    add.addEventListener('click', () => {
+      draft.push(blankQ()); HQ.saveDraft(draft); draw();
+      const last = list.lastElementChild; if (last) last.querySelector('input').focus();
+    });
+
+    save.addEventListener('click', async () => {
+      err.textContent = '';
+      const out = [];
+      for (let i = 0; i < draft.length; i++){
+        const it = draft[i], q = it.q.trim();
+        const filled = it.a.map((t, n) => ({ t: t.trim(), n })).filter(x => x.t);
+        if (!q && !filled.length) continue;                       // skip completely blank ones
+        if (!q) return err.textContent = 'Question ' + (i+1) + ' needs the actual question.';
+        if (filled.length < 2) return err.textContent = 'Question ' + (i+1) + ' needs at least two answers.';
+        const c = filled.findIndex(x => x.n === it.c);
+        if (c < 0) return err.textContent = 'Tick the right answer for question ' + (i+1) + '.';
+        out.push({ q, a: filled.map(x => x.t), c });
+      }
+      if (!out.length) return err.textContent = 'Write at least one question first.';
+
+      save.disabled = true; save.textContent = 'Saving…';
+      try {
+        const j = await apiJson('/api/herquiz', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ session_id: SID, id: HQ.id() || undefined, questions: out })
+        });
+        store.set('sl_hq_id', j.id);
+        track('herquiz_saved', { questions: out.length });
+        toast('Saved');
+        if (alive) render('results');
+      } catch(e){
+        err.textContent = "Couldn't save just now — check your connection and try again.";
+        save.disabled = false; save.textContent = HQ.id() ? 'Save changes' : 'Save and get my link';
+      }
+    });
+  }
+
+  /* --- the results view --- */
+  function results(){
+    const id = HQ.id();
+    const link = HQ.link(id);
+    const w = el('div', 'wrap');
+
+    const share = el('section', 'panel');
+    share.appendChild(el('p', 'eyebrow', 'Your quiz is ready'));
+    share.appendChild(el('p', 'fine', 'Send me the link. When I finish it, my score appears below.'));
+    const wa = el('button', 'primary', 'Send me the link on WhatsApp');
+    wa.addEventListener('click', () => {
+      track('herquiz_shared', { via: 'whatsapp' });
+      location.href = 'https://wa.me/' + CFG.PHONE + '?text=' +
+        encodeURIComponent("Your turn. Let's see how well you know me: " + link);
+    });
+    const two = el('div', 'two');
+    const copy = el('button', 'ghost', 'Copy link');
+    copy.addEventListener('click', async () => {
+      try { await navigator.clipboard.writeText(link); toast('Link copied'); }
+      catch(e){ prompt('Copy this link:', link); }
+      track('herquiz_shared', { via: 'copy' });
+    });
+    const ed = el('button', 'ghost', 'Edit questions');
+    ed.addEventListener('click', () => render('edit'));
+    two.append(copy, ed);
+    share.append(wa, two);
+
+    const sc = el('section', 'panel');
+    sc.appendChild(el('p', 'fine', 'Checking my score…'));
+    const refresh = el('button', 'ghost', 'Refresh score');
+    refresh.addEventListener('click', load);
+    const fresh = el('button', 'link', 'Start a brand-new quiz');
+    fresh.style.marginTop = '14px';
+    fresh.addEventListener('click', () => {
+      if (!confirm('Start over? The old link will stop showing new scores here.')) return;
+      store.del('sl_hq_id'); store.del('sl_hq_draft'); draft = HQ.draft(); render('edit');
+    });
+    w.append(share, sc, refresh, fresh);
+    host.appendChild(w);
+
+    async function load(){
+      sc.innerHTML = '';
+      sc.appendChild(el('p', 'fine', 'Checking my score…'));
+      let j;
+      try {
+        j = await apiJson('/api/herquiz?id=' + encodeURIComponent(id) + '&session_id=' + encodeURIComponent(SID));
+      } catch(e){
+        if (!alive) return;
+        sc.innerHTML = '';
+        if (e.status === 404){ store.del('sl_hq_id'); render('edit'); return; }
+        sc.appendChild(el('p', 'fine', "Couldn't reach the server. Try Refresh in a bit."));
+        return;
+      }
+      if (!alive) return;
+      sc.innerHTML = '';
+      const att = j.attempts || [];
+      sc.appendChild(el('p', 'eyebrow', 'My score'));
+      if (!att.length){
+        sc.appendChild(el('p', 'big', '—'));
+        sc.appendChild(el('p', 'fine', "I haven't taken it yet. " + j.questions.length + ' question' +
+          (j.questions.length === 1 ? '' : 's') + ' waiting for me.'));
+        return;
+      }
+      w.insertBefore(sc, share);                    // once there is a score, show it first
+      const a = att[0], r = a.total ? a.score / a.total : 0;
+      const big = el('p', 'big', a.score + ' '); big.appendChild(el('small', '', '/ ' + a.total)); sc.appendChild(big);
+      sc.appendChild(el('p', 'fine',
+        (r === 1 ? 'I know you completely.' : r >= .75 ? 'I know you well.' : r >= .5 ? "Not bad — I'm learning." : 'I clearly need to pay more attention.') +
+        '  ·  ' + fmtWhen(a.created_at)));
+
+      (a.review || []).forEach(rv => {
+        const row = el('div', 'rv');
+        row.appendChild(el('b', '', rv.q));
+        const mine = rv.pick != null && rv.a[rv.pick] != null ? rv.a[rv.pick] : 'No answer';
+        const s = el('span');
+        s.appendChild(el('span', rv.right ? 'y' : 'n', (rv.right ? '✓ ' : '✕ ') + 'I said: ' + mine));
+        if (!rv.right) s.appendChild(el('span', '', 'Right answer: ' + rv.a[rv.c]));
+        row.appendChild(s);
+        sc.appendChild(row);
+      });
+
+      if (att.length > 1){
+        sc.appendChild(el('p', 'eyebrow', 'Earlier tries')).style.marginTop = '14px';
+        att.slice(1, 8).forEach(x => {
+          const h = el('div', 'hist');
+          h.append(el('span', '', x.score + ' / ' + x.total), el('span', '', fmtWhen(x.created_at)));
+          sc.appendChild(h);
+        });
+      }
+    }
+    load();
+  }
+
+  render(HQ.id() ? 'results' : 'edit');
+  return () => { alive = false; host.classList.remove('scroll'); };
+}
+
 /* ---------- the stage ---------- */
 const GAMES = {
-  stars:         { name:'Catch the Light', ic:'\u2726', blurb:'Twelve falling stars',        run: runStars },
-  constellation: { name:'Join the Dots',   ic:'\u2727', blurb:'Draw three constellations',   run: runConstellation },
-  pairs:         { name:'Moon Pairs',      ic:'\u263D', blurb:'Find the matching six',       run: runPairs },
-  breathe:       { name:'Breathe',         ic:'\u25CB', blurb:'Five slow rounds, one minute', run: runBreathe },
-  quiz:          { name: CFG.QUIZ_TITLE,   ic:'?',      blurb:'Eight questions about ' + F,   run: runQuiz }
+  stars:         { name:'Catch the Light', ic:'✦', blurb:'Twelve falling stars',         run: runStars },
+  constellation: { name:'Join the Dots',   ic:'✧', blurb:'Draw three constellations',    run: runConstellation },
+  pairs:         { name:'Moon Pairs',      ic:'☽', blurb:'Find the matching six',        run: runPairs },
+  breathe:       { name:'Breathe',         ic:'○', blurb:'Five slow rounds, one minute', run: runBreathe },
+  quiz:          { name: CFG.QUIZ_TITLE,   ic:'?',      blurb: QUIZ.length + ' questions about me', run: runQuiz, scroll: true },
+  herquiz:       { name:'Now quiz me',     ic:'✎', blurb:'Write your questions, see my score', run: runHerQuiz, isNew: true }
 };
 function doneList(){
-  try { return JSON.parse(localStorage.getItem('sl_done') || '[]'); } catch(e){ return []; }
+  try { return JSON.parse(store.get('sl_done') || '[]'); } catch(e){ return []; }
 }
 function tiles(){
   const done = doneList(), box = $('#tiles');
@@ -648,10 +995,12 @@ function tiles(){
   Object.keys(GAMES).forEach(key => {
     const g = GAMES[key];
     const b = document.createElement('button');
-    b.className = 'tile';
+    const fresh = g.isNew && !HQ.id();
+    b.className = 'tile' + (fresh ? ' new' : '');
     b.innerHTML = '<span class="ic">' + g.ic + '</span><span>' + g.name +
                   '<small>' + g.blurb + '</small></span>' +
-                  (done.indexOf(key) > -1 ? '<span class="tick">\u2713</span>' : '');
+                  (fresh ? '<span class="tag">New</span>' :
+                   done.indexOf(key) > -1 ? '<span class="tick">✓</span>' : '');
     b.addEventListener('click', () => openGame(key));
     box.appendChild(b);
   });
@@ -661,13 +1010,16 @@ let cleanup = null, startedAt = 0, current = null;
 
 function openGame(key){
   const g = GAMES[key];
+  if (cleanup){ cleanup(); cleanup = null; }
   current = key; startedAt = Date.now();
   $('#stagetitle').textContent = g.name;
-  $('#stagebody').innerHTML = '';
+  const body = $('#stagebody');
+  body.innerHTML = '';
+  body.classList.toggle('scroll', !!g.scroll);
   $('#stage').classList.add('on');
   document.body.classList.add('locked');
   track('game_start', { game: key });
-  cleanup = g.run($('#stagebody'), res => finishGame(key, res));
+  cleanup = g.run(body, res => finishGame(key, res));
 }
 
 function finishGame(key, res){
@@ -677,8 +1029,9 @@ function finishGame(key, res){
   track('game_end', { game: key, score: res.score, total: res.total });
 
   const done = doneList();
-  if (done.indexOf(key) === -1){ done.push(key); localStorage.setItem('sl_done', JSON.stringify(done)); }
+  if (done.indexOf(key) === -1){ done.push(key); store.set('sl_done', JSON.stringify(done)); }
 
+  $('#stagebody').classList.remove('scroll');
   $('#stagebody').innerHTML =
     '<div id="finish"><div><h4></h4><p></p>' +
     '<button class="primary" id="f-again" style="max-width:240px">Play again</button>' +
@@ -694,6 +1047,7 @@ function closeStage(){
   if (cleanup){ cleanup(); cleanup = null; }
   $('#stage').classList.remove('on');
   $('#stagebody').innerHTML = '';
+  $('#stagebody').classList.remove('scroll');
   document.body.classList.remove('locked');
   $('#quote').textContent = Quotes.one();
   tiles();
@@ -703,18 +1057,18 @@ $('#close').addEventListener('click', closeStage);
 
 /* ---------- her message ---------- */
 const box = $('#msg-text');
-box.value = localStorage.getItem('sl_draft') || '';
+box.value = store.get('sl_draft') || '';
 let saveT;
 box.addEventListener('input', () => {
   clearTimeout(saveT);
   saveT = setTimeout(() => {
-    localStorage.setItem('sl_draft', box.value);
+    store.set('sl_draft', box.value);
     $('#msg-saved').textContent = box.value ? 'Saved on this phone' : 'Drafts stay on this phone';
   }, 500);
 });
 $('#msg-clear').addEventListener('click', () => {
   box.value = '';
-  localStorage.removeItem('sl_draft');
+  store.del('sl_draft');
   $('#msg-saved').textContent = 'Drafts stay on this phone';
   box.focus();
 });
@@ -725,7 +1079,7 @@ $('#msg-send').addEventListener('click', async () => {
   btn.disabled = true; btn.textContent = 'Sending…';
   await api('/api/message', { body: text });
   track('message_sent', { chars: text.length });
-  localStorage.removeItem('sl_draft');
+  store.del('sl_draft');
   btn.textContent = 'Sent';
   toast('Sent. Opening WhatsApp…');
   setTimeout(() => {
@@ -735,7 +1089,7 @@ $('#msg-send').addEventListener('click', async () => {
 
 /* ---------- her location, only if she asks for it ---------- */
 function locIdle(){
-  $('#loc-row').innerHTML = '<button class="link" id="loc-btn">Show ' + F + ' where I am</button>';
+  $('#loc-row').innerHTML = '<button class="link" id="loc-btn">Share where I am</button>';
   $('#loc-btn').addEventListener('click', askLocation);
 }
 function askLocation(){
@@ -745,8 +1099,7 @@ function askLocation(){
     await api('/api/pin', { lat: pos.coords.latitude, lng: pos.coords.longitude,
                             accuracy_m: pos.coords.accuracy });
     track('location_shared');
-    $('#loc-row').innerHTML = '<span style="font-size:12.5px;opacity:.8">' + F +
-      ' can see where you are &nbsp;</span><button class="link" id="loc-undo">Undo</button>';
+    $('#loc-row').innerHTML = '<span>Sharing where you are</span><button class="link" id="loc-undo">Undo</button>';
     $('#loc-undo').addEventListener('click', async () => {
       await api('/api/pin', { clear: true });
       track('location_cleared');
@@ -765,17 +1118,17 @@ $('#sheet').addEventListener('click', e => { if (e.target.id === 'sheet') $('#sh
 /* ---------- boot ---------- */
 (async function boot(){
   const now = new Date();
-  await Quotes.load(now.getHours());
   $('#quote').textContent = Quotes.one();
   tiles();
+  Quotes.load(now.getHours()).then(() => { Quotes.used.clear(); $('#quote').textContent = Quotes.one(); });
   api('/api/session', {
     local_hour: now.getHours(),
     local_time: now.toTimeString().slice(0,5),
     tz: Intl.DateTimeFormat().resolvedOptions().timeZone,
     screen: innerWidth + 'x' + innerHeight,
-    is_return: localStorage.getItem('sl_seen') === '1'
+    is_return: store.get('sl_seen') === '1'
   });
-  localStorage.setItem('sl_seen', '1');
+  store.set('sl_seen', '1');
 })();
 
 let T0 = Date.now();

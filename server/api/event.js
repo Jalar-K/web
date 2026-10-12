@@ -4,7 +4,8 @@ import { cors, body, isUuid } from '../lib/http.js';
 const ALLOWED = new Set([
   'home', 'game_start', 'game_end', 'star_caught', 'wish',
   'leave', 'location_shared', 'location_cleared',
-  'message_sent', 'about_opened'
+  'message_sent', 'about_opened',
+  'herquiz_saved', 'herquiz_shared', 'herquiz_answered'
 ]);
 
 export default async function handler(req, res) {
