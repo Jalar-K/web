@@ -299,6 +299,8 @@ const CFG = {
      a = the four answer choices
      c = which choice is correct, counting from 0
          (0 = first, 1 = second, 2 = third, 3 = fourth)
+         More than one right answer? Use a list:  c:[1,3]
+         (picking either of them counts as right)
    Add or delete whole lines freely — the score adjusts itself.            */
 const QUIZ = [
   { q:"What do I always end up ordering?",          a:["Chicken and chips","Rolex","Pilau","Whatever you're having"],   c:3 },
@@ -718,6 +720,9 @@ function runBreathe(host, done){
 }
 
 /* ---------- GAME 5 · do you know me? (questions are at the top) ---------- */
+// c can be one number (c:2) or a list of numbers (c:[1,3])
+const isRight = (item, n) => Array.isArray(item.c) ? item.c.indexOf(n) > -1 : n === item.c;
+
 function runQuiz(host, done){
   let i = 0, score = 0, picks = [], t0 = Date.now(), timers = [];
   host.innerHTML = '<div class="wrap"><div class="hud"><span>' + CFG.QUIZ_TITLE + '</span><span id="q-step"></span></div>' +
@@ -747,11 +752,11 @@ function runQuiz(host, done){
     const item = QUIZ[i];
     Array.from(box.children).forEach((b, m) => {
       b.disabled = true;
-      if (m === item.c) b.classList.add('right');
+      if (isRight(item, m)) b.classList.add('right');
       else if (m === n) b.classList.add('wrong');
     });
     picks.push(n);
-    if (n === item.c) score++;
+    if (isRight(item, n)) score++;
     timers.push(setTimeout(() => {
       if (++i >= QUIZ.length) return done({ score: score, total: QUIZ.length,
         duration_ms: Date.now() - t0, detail: { picks: picks },
